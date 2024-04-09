@@ -1,0 +1,109 @@
+{
+  "books": [
+    {
+      "name": "Intro to java programming",
+      "author": "Daniel",
+      "summary": "An introduction to java programming for beginners",
+      "imageURL": "C:/Users/brayd/IdeaProjects/TheAtheneumVault/Images/IntroJava.jpg",
+      "readPages": [
+        7
+      ],
+      "notes": [
+        {
+          "pageNumber": 67,
+          "note": "I HATE PATRICK"
+        }
+      ],
+      "tags": [
+        "John Porks",
+        "Patrick",
+        "Tissue",
+        "Johnathan"
+      ]
+    },
+    {
+      "name": "Intro to java programming",
+      "author": "Daniel",
+      "summary": "An introduction to java programming for beginners",
+      "imageURL": "C:/Users/brayd/IdeaProjects/TheAtheneumVault/Images/IntroJava.jpg",
+      "readPages": [
+        7
+      ],
+      "notes": [
+        {
+          "pageNumber": 67,
+          "note": "I HATE PATRICK"
+        }
+      ],
+      "tags": [
+        "John Porks",
+        "Patrick",
+        "Tissue",
+        "Johnathan"
+      ]
+    },
+    {
+      "name": "Intro to java programming",
+      "author": "Daniel",
+      "summary": "An introduction to java programming for beginners",
+      "imageURL": "C:/Users/brayd/IdeaProjects/TheAtheneumVault/Images/IntroJava.jpg",
+      "readPages": [
+        7
+      ],
+      "notes": [
+        {
+          "pageNumber": 67,
+          "note": "I HATE PATRICK"
+        }
+      ],
+      "tags": [
+        "John Porks",
+        "Patrick",
+        "Tissue",
+        "Johnathan"
+      ]
+    },
+    {
+      "name": "Intro to java programming",
+      "author": "Daniel",
+      "summary": "An introduction to java programming for beginners",
+      "imageURL": "C:/Users/brayd/IdeaProjects/TheAtheneumVault/Images/IntroJava.jpg",
+      "readPages": [
+        7
+      ],
+      "notes": [
+        {
+          "pageNumber": 67,
+          "note": "I HATE PATRICK"
+        }
+      ],
+      "tags": [
+        "John Porks",
+        "Patrick",
+        "Tissue",
+        "Johnathan"
+      ]
+    },
+    {
+      "name": "Intro to java programming",
+      "author": "Daniel",
+      "summary": "An introduction to java programming for beginners",
+      "imageURL": "C:/Users/brayd/IdeaProjects/TheAtheneumVault/Images/IntroJava.jpg",
+      "readPages": [
+        7
+      ],
+      "notes": [
+        {
+          "pageNumber": 67,
+          "note": "I HATE PATRICK"
+        }
+      ],
+      "tags": [
+        "John Porks",
+        "Patrick",
+        "Tissue",
+        "Johnathan"
+      ]
+    }
+  ]
+}
