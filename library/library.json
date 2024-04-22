@@ -4,7 +4,7 @@
       "name": "Intro to java programming",
       "author": "Daniel",
       "summary": "An introduction to java programming for beginners",
-      "imageURL": "C:/Users/brayd/IdeaProjects/TheAtheneumVault/Images/IntroJava.jpg",
+      "imageURL": "Images/IntroJava.jpg",
       "readPages": [
         7
       ],
@@ -22,10 +22,10 @@
       ]
     },
     {
-      "name": "Intro to java programming",
-      "author": "Daniel",
+      "name": "In Loving Memory Of John Pork",
+      "author": "Jack Harlow",
       "summary": "An introduction to java programming for beginners",
-      "imageURL": "C:/Users/brayd/IdeaProjects/TheAtheneumVault/Images/IntroJava.jpg",
+      "imageURL": "Images/johnpork.jpg",
       "readPages": [
         7
       ],
@@ -43,10 +43,10 @@
       ]
     },
     {
-      "name": "Intro to java programming",
-      "author": "Daniel",
-      "summary": "An introduction to java programming for beginners",
-      "imageURL": "C:/Users/brayd/IdeaProjects/TheAtheneumVault/Images/IntroJava.jpg",
+      "name": "She Cooked",
+      "author": "Pignesh",
+      "summary": "cooker",
+      "imageURL": "Images/cook.jpg",
       "readPages": [
         7
       ],
@@ -64,10 +64,10 @@
       ]
     },
     {
-      "name": "Intro to java programming",
-      "author": "Daniel",
-      "summary": "An introduction to java programming for beginners",
-      "imageURL": "C:/Users/brayd/IdeaProjects/TheAtheneumVault/Images/IntroJava.jpg",
+      "name": "Alone",
+      "author": "Patrick McDougle",
+      "summary": "Heart wrenching love story",
+      "imageURL": "Images/alone.jpg",
       "readPages": [
         7
       ],
