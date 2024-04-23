@@ -13,6 +13,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import util.Book;
 import util.Library;
+import util.Range;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,13 +24,15 @@ public class Main extends Application {
     private Library library;
     private Book selectedBook;
 
+    private SplitPane pageSplit;
+
     @Override
     public void start(Stage stage) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         library = objectMapper.readValue(new File("library/library.json"), Library.class);
 
         VBox page = new VBox();
-        SplitPane pageSplit = new SplitPane();
+        pageSplit = new SplitPane();
         pageSplit.setPrefHeight(580);
 
         VBox lists = new VBox();
@@ -43,38 +46,7 @@ public class Main extends Application {
         pageSplit.getItems().add(lists);
 
         //TODO: READ VALUES FROM BOOKS AND DISPLAY
-
-        VBox booksView = new VBox();
-        TextField search = new TextField();
-        search.setPromptText("Search For A Book");
-
-        GridPane books = new GridPane();
-        books.setHgap(10);
-        books.setVgap(10);
-        ScrollPane sp = new ScrollPane(books);
-        for (int i = 0; i < library.getBooks().size(); i++) {
-            Book book = library.getBooks().get(i);
-
-            VBox vBox = new VBox();
-            Image image = new Image(new File(book.getImageURL()).toURI().toURL().toString(), 200, 1000, true, true);
-            ImageView iv = new ImageView(image);
-            iv.setOnMouseClicked(ev -> {
-                double split = pageSplit.getDividerPositions()[1];
-                selectedBook = book;
-                pageSplit.getItems().remove(2);
-                pageSplit.getItems().add(getDetails());
-                pageSplit.setDividerPosition(1, split);
-            });
-
-            Label name = new Label(book.getName());
-
-            vBox.getChildren().addAll(iv, name);
-            books.add(vBox, i % 2, i / 2);
-        }
-
-        booksView.getChildren().addAll(search, sp);
-        pageSplit.getItems().add(booksView);
-
+        updateBookView();
 
         //TODO: details
 
@@ -94,32 +66,73 @@ public class Main extends Application {
 
         page.getChildren().addAll(pageSplit, info);
 
-        Library library = new Library();
-        library.addBook(new Book("Intro to java programming", "Daniel", "An introduction to java programming for beginners", "Images/IntroJava.jpg"));
-        library.getBooks().get(0).addTag("John Porks");
-        library.getBooks().get(0).addNote(67, "I HATE PATRICK");
-        library.getBooks().get(0).addReadPage(7);
-
-//        objectMapper.writeValue(new File("library/library.json"), library);
-
         Scene scene = new Scene(page, 900, 600);
         stage.setTitle("The Atheneum Vault");
         stage.setScene(scene);
         stage.show();
+    }
 
-        Set<Integer> set = new HashSet<>(List.of(1,5,6,7,8,14,20,21,22,23));
-        System.out.println(convertPagesRead(set));
+    public void updateBookView() {
+        VBox booksView = new VBox();
+        TextField search = new TextField();
+        search.setPromptText("Search For A Book");
+
+        GridPane books = new GridPane();
+        books.setHgap(10);
+        books.setVgap(10);
+        ScrollPane sp = new ScrollPane(books);
+        for (int i = 0; i < library.getBooks().size(); i++) {
+            Book book = library.getBooks().get(i);
+
+            VBox vBox = new VBox();
+            ImageView iv = new ImageView(getImage(book));
+            iv.setOnMouseClicked(ev -> {
+                selectedBook = book;
+                updateDetails();
+            });
+
+            Label name = new Label(book.getName());
+
+            vBox.getChildren().addAll(iv, name);
+            books.add(vBox, i % 2, i / 2);
+        }
+
+
+        booksView.getChildren().addAll(search, sp);
+        if (pageSplit.getItems().size() == 3) {
+            double split = pageSplit.getDividerPositions()[1];
+            pageSplit.getItems().set(1, booksView);
+            pageSplit.setDividerPosition(1, split);
+        } else {
+            pageSplit.getItems().add(booksView);
+        }
+    }
+
+    private Image getImage(Book book) {
+        Image image = null;
+        try {
+            if (new File(book.getImageURL()).exists()) {
+                image = new Image(new File(book.getImageURL()).toURI().toURL().toString(), 200, 1000, true, true);
+            } else {
+                image = new Image(new File("Images/image_unknown.png").toURI().toURL().toString(), 200, 1000, true, true);
+            }
+        } catch (Exception e) {
+
+        }
+        return image;
+    }
+
+    public void updateDetails() {
+        double split = pageSplit.getDividerPositions()[1];
+        pageSplit.getItems().remove(2);
+        pageSplit.getItems().add(getDetails());
+        pageSplit.setDividerPosition(1, split);
     }
 
     public ScrollPane getDetails() {
         VBox details = new VBox();
-        try {
-            Image image = new Image(new File(selectedBook == null ? "Images/image_unknown.png" : selectedBook.getImageURL()).toURI().toURL().toString(), 200, 1000, true, true);
-            ImageView iv = new ImageView(image);
-            details.getChildren().add(iv);
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        }
+        ImageView iv = new ImageView(getImage(selectedBook));
+        details.getChildren().add(iv);
         Label title = new Label("Title:");
         TextField titleTF = new TextField(selectedBook == null ? "" : selectedBook.getName());
         titleTF.setPromptText("Title");
@@ -139,9 +152,37 @@ public class Main extends Application {
         summaryTF.setPromptText("Summary");
 
         Label pagesRead = new Label("Pages Read:");
-        TextField pagesReadTF = new TextField();
+        TextField pagesReadTF = new TextField(selectedBook == null ? "" : convertPagesRead(selectedBook.getReadPages()));
+        pagesReadTF.setPromptText("Pages Read");
 
-        details.getChildren().addAll(title, titleTF, author, authorTF, imageURL, imageURLTF, summary, summaryTF);
+        Label warning = new Label();
+        warning.setTextFill(Color.RED);
+
+        Button save = new Button("Save");
+        save.setOnMouseClicked(mouseEvent -> {
+            if (isValidPageNotation(pagesReadTF.getText())) {
+                selectedBook.setName(titleTF.getText());
+                selectedBook.setAuthor(authorTF.getText());
+                selectedBook.setImageURL(imageURLTF.getText());
+                selectedBook.setSummary(summaryTF.getText());
+                selectedBook.setReadPages(convertPagesReadFromString(pagesReadTF.getText()));
+
+                ObjectMapper objectMapper = new ObjectMapper();
+                try {
+                    objectMapper.writeValue(new File("library/library.json"), library);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                updateDetails();
+                updateBookView();
+            } else {
+                warning.setText("Pages Read is Invalid!!!");
+            }
+
+        });
+
+
+        details.getChildren().addAll(title, titleTF, author, authorTF, imageURL, imageURLTF, summary, summaryTF, pagesRead, pagesReadTF, save, warning);
 
         ScrollPane sp = new ScrollPane(details);
         sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
@@ -150,29 +191,105 @@ public class Main extends Application {
         return sp;
     }
 
-    public String convertPagesRead(Set<Integer> pages) {
-        StringBuilder sb = new StringBuilder();
-        List<Integer> listPages = new ArrayList<>(pages);
-        Collections.sort(listPages);
-        int startPage = 0;
-        boolean inList = false;
+    public Set<Integer> convertPagesReadFromString(String s) {
+        Set<Integer> set = new HashSet<>();
 
-        for (int i = 0; i < listPages.size()-1; i++) {
-            if (!inList) {
-                if (listPages.get(startPage) + 1 == listPages.get(i)) {
-                    inList = true;
-                } else if(listPages.get(i) != listPages.get(i+1) + 1){
-                    sb.append("%d, ".formatted(listPages.get(i)));
-                    startPage = i;
+        s = s.replaceAll("\\s", "");
+        String[] split = s.split(",");
+        for (String string : split) {
+            if (string.contains("-")) {
+                int[] edges = Arrays.stream(string.split("-")).mapToInt(Integer::parseInt).toArray();
+                for (int i = edges[0]; i <= edges[1]; i++) {
+                    set.add(i);
                 }
             } else {
-                if(listPages.get(i-1) != listPages.get(i) + 1){
-                    sb.append("%d-%d, ".formatted(listPages.get(startPage), listPages.get(i-1)));
-                    inList = false;
+                set.add(Integer.parseInt(string));
+            }
+        }
+        return set;
+    }
+
+    public String convertPagesRead(Set<Integer> pages) {
+        List<Integer> listPages = new ArrayList<>(pages);
+        Collections.sort(listPages);
+        List<Range> range = new ArrayList<>(List.of(new Range()));
+        boolean inRange = false;
+        int rangeIndex = 0;
+
+        for (int i = 0; i < listPages.size(); i++) {
+            if (!inRange) {
+                if (listPages.get(range.get(rangeIndex).getStart()) == (listPages.get(i) - 1)) {
+                    inRange = true;
+                    range.get(rangeIndex).setEnd(i);
+                } else {
+                    range.get(rangeIndex).setStart(i);
+                }
+            } else {
+                if (listPages.get(range.get(rangeIndex).getEnd()) == (listPages.get(i) - 1)) {
+                    range.get(rangeIndex).setEnd(i);
+                } else {
+                    inRange = false;
+                    rangeIndex++;
+                    range.add(new Range());
                 }
             }
         }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < listPages.size(); i++) {
+            if (!inRange(range, i)) {
+                sb.append("%d, ".formatted(listPages.get(i)));
+            } else {
+                Range range1 = range.get(rangeIndex(range, i));
+                if (range1.getStart() == i) {
+                    sb.append("%d-%d, ".formatted(listPages.get(range1.getStart()), listPages.get(range1.getEnd())));
+                }
+            }
+        }
+        sb.delete(sb.length() - 2, sb.length());
+
         return sb.toString();
+    }
+
+    public boolean isValidPageNotation(String s) {
+        String[] split = s.replaceAll("\\s", "").split(",");
+        for (String string : split) {
+            if (string.isBlank()) {
+                return false;
+            } else if (string.contains("-")) {
+                String[] range = string.split("-");
+                try {
+                    Integer.parseInt(range[0]);
+                    Integer.parseInt(range[1]);
+                } catch (Exception e) {
+                    return false;
+                }
+            } else {
+                try {
+                    Integer.parseInt(string);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private boolean inRange(List<Range> ranges, int index) {
+        for (Range range : ranges) {
+            if (index >= range.getStart() && index <= range.getEnd()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private int rangeIndex(List<Range> ranges, int index) {
+        for (int i = 0; i < ranges.size(); i++) {
+            if (index >= ranges.get(i).getStart() && index <= ranges.get(i).getEnd()) {
+                return i;
+            }
+        }
+        return -1;
     }
 
     public static void main(String[] args) {

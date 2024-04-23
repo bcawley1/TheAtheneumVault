@@ -73,6 +73,10 @@ public class Book {
         return readPages.contains(page);
     }
 
+    public void setReadPages(Set<Integer> readPages) {
+        this.readPages = readPages;
+    }
+
     public void addReadPage(int page){
         readPages.add(page);
     }
