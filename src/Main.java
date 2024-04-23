@@ -13,6 +13,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import util.Book;
 import util.Library;
+import util.Note;
 import util.Range;
 
 import java.io.File;
@@ -23,8 +24,8 @@ import java.util.*;
 public class Main extends Application {
     private Library library;
     private Book selectedBook;
-
     private SplitPane pageSplit;
+    private Note selectedNote;
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -33,7 +34,7 @@ public class Main extends Application {
 
         VBox page = new VBox();
         pageSplit = new SplitPane();
-        pageSplit.setPrefHeight(580);
+        pageSplit.setPrefHeight(2000);
 
         VBox lists = new VBox();
         for (String tag : library.getAllTags()) {
@@ -45,12 +46,9 @@ public class Main extends Application {
         pageSplit.setDividerPositions(0.25, 0.75);
         pageSplit.getItems().add(lists);
 
-        //TODO: READ VALUES FROM BOOKS AND DISPLAY
         updateBookView();
 
-        //TODO: details
-
-        pageSplit.getItems().add(getDetails());
+        updateDetails();
 
         Label name = new Label("The Atheneum Vault");
         name.setTextFill(Color.rgb(159, 159, 159));
@@ -123,13 +121,14 @@ public class Main extends Application {
     }
 
     public void updateDetails() {
-        double split = pageSplit.getDividerPositions()[1];
-        pageSplit.getItems().remove(2);
-        pageSplit.getItems().add(getDetails());
-        pageSplit.setDividerPosition(1, split);
-    }
+        double split = 0.75;
+        double scrollAmount = 0;
+        if(pageSplit.getItems().size()==3) {
+            split = pageSplit.getDividerPositions()[1];
+            scrollAmount = ((ScrollPane)pageSplit.getItems().get(2)).getVvalue();
+            pageSplit.getItems().remove(2);
+        }
 
-    public ScrollPane getDetails() {
         VBox details = new VBox();
         ImageView iv = new ImageView(getImage(selectedBook));
         details.getChildren().add(iv);
@@ -183,12 +182,36 @@ public class Main extends Application {
 
 
         details.getChildren().addAll(title, titleTF, author, authorTF, imageURL, imageURLTF, summary, summaryTF, pagesRead, pagesReadTF, save, warning);
+        if (selectedBook != null) {
+            for (Note note : selectedBook.getNotes()) {
+                VBox cool = new VBox();
+                cool.setSpacing(0);
+                Button button = new Button(String.valueOf(note.getPageNumber()));
+                button.setPrefWidth(1000);
+                button.setOnMouseClicked(mouseEvent -> {
+                    selectedNote = note;
+                    updateDetails();
+                });
+                cool.getChildren().add(button);
+
+                if (note.equals(selectedNote)) {
+                    TextArea noteText = new TextArea(note.getNote());
+                    noteText.setWrapText(true);
+                    noteText.setPrefHeight(100);
+                    noteText.setPromptText("Note");
+                    cool.getChildren().add(noteText);
+                }
+                details.getChildren().add(cool);
+            }
+        }
 
         ScrollPane sp = new ScrollPane(details);
+        sp.setVvalue(scrollAmount);
         sp.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
         sp.setFitToWidth(true);
 
-        return sp;
+        pageSplit.getItems().add(sp);
+        pageSplit.setDividerPosition(1, split);
     }
 
     public Set<Integer> convertPagesReadFromString(String s) {
