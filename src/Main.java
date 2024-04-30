@@ -181,7 +181,15 @@ public class Main extends Application {
         });
 
 
-        details.getChildren().addAll(title, titleTF, author, authorTF, imageURL, imageURLTF, summary, summaryTF, pagesRead, pagesReadTF, save, warning);
+        Label newNote = new Label("New Note:");
+        TextField pageNum = new TextField();
+        pageNum.setPromptText("Page Number");
+        TextArea noteTextArea = new TextArea();
+        noteTextArea.setPromptText("Note"); 
+        noteTextArea.setWrapText(true);
+        noteTextArea.setPrefHeight(100);
+
+        details.getChildren().addAll(title, titleTF, author, authorTF, imageURL, imageURLTF, summary, summaryTF, pagesRead, pagesReadTF, warning, newNote, pageNum, noteTextArea, save);
         if (selectedBook != null) {
             for (Note note : selectedBook.getNotes()) {
                 VBox cool = new VBox();
