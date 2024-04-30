@@ -112,4 +112,8 @@ public class Book {
     public void removeTag(String tag){
         tags.remove(tag);
     }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
 }

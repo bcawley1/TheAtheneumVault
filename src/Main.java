@@ -26,6 +26,7 @@ public class Main extends Application {
     private Book selectedBook;
     private SplitPane pageSplit;
     private Note selectedNote;
+    private String currentFilter = "";
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -35,16 +36,9 @@ public class Main extends Application {
         VBox page = new VBox();
         pageSplit = new SplitPane();
         pageSplit.setPrefHeight(2000);
-
-        VBox lists = new VBox();
-        for (String tag : library.getAllTags()) {
-            Button button = new Button(tag);
-            button.setPrefWidth(1000);
-
-            lists.getChildren().add(button);
-        }
         pageSplit.setDividerPositions(0.25, 0.75);
-        pageSplit.getItems().add(lists);
+
+        updateTags();
 
         updateBookView();
 
@@ -79,8 +73,9 @@ public class Main extends Application {
         books.setHgap(10);
         books.setVgap(10);
         ScrollPane sp = new ScrollPane(books);
-        for (int i = 0; i < library.getBooks().size(); i++) {
-            Book book = library.getBooks().get(i);
+        List<Book> booksFiltered = currentFilter.isEmpty() ? library.getBooks() : library.filterBooks(currentFilter);
+        for (int i = 0; i < booksFiltered.size(); i++) {
+            Book book = booksFiltered.get(i);
 
             VBox vBox = new VBox();
             ImageView iv = new ImageView(getImage(book));
@@ -120,6 +115,30 @@ public class Main extends Application {
         return image;
     }
 
+    public void updateTags(){
+        double split = 0.25;
+        VBox lists = new VBox();
+        for (String tag : library.getAllTags()) {
+            Button button = new Button(tag);
+            button.setPrefWidth(1000);
+            button.setOnMouseClicked(mouseEvent -> {
+                currentFilter = tag;
+                updateTags();
+                updateBookView();
+                updateDetails();
+            });
+
+            lists.getChildren().add(button);
+        }
+        if(pageSplit.getItems().size()==3) {
+            split = pageSplit.getDividerPositions()[0];
+            pageSplit.getItems().set(0, lists);
+        } else {
+            pageSplit.getItems().add(lists);
+        }
+        pageSplit.setDividerPosition(0, split);
+    }
+
     public void updateDetails() {
         double split = 0.75;
         double scrollAmount = 0;
@@ -154,6 +173,10 @@ public class Main extends Application {
         TextField pagesReadTF = new TextField(selectedBook == null ? "" : convertPagesRead(selectedBook.getReadPages()));
         pagesReadTF.setPromptText("Pages Read");
 
+        Label tags = new Label("Tags:");
+        TextField tagsTF = new TextField(selectedBook == null ? "" : selectedBook.getTags().toString().substring(1,selectedBook.getTags().toString().length()-1));
+        tagsTF.setPromptText("Tags");
+
         Label warning = new Label();
         warning.setTextFill(Color.RED);
 
@@ -165,6 +188,7 @@ public class Main extends Application {
                 selectedBook.setImageURL(imageURLTF.getText());
                 selectedBook.setSummary(summaryTF.getText());
                 selectedBook.setReadPages(convertPagesReadFromString(pagesReadTF.getText()));
+                selectedBook.setTags(tagsTF.getText().isBlank() ? new ArrayList<>() : List.of(tagsTF.getText().split(", ")));
 
                 ObjectMapper objectMapper = new ObjectMapper();
                 try {
@@ -174,6 +198,7 @@ public class Main extends Application {
                 }
                 updateDetails();
                 updateBookView();
+                updateTags();
             } else {
                 warning.setText("Pages Read is Invalid!!!");
             }
@@ -189,7 +214,7 @@ public class Main extends Application {
         noteTextArea.setWrapText(true);
         noteTextArea.setPrefHeight(100);
 
-        details.getChildren().addAll(title, titleTF, author, authorTF, imageURL, imageURLTF, summary, summaryTF, pagesRead, pagesReadTF, warning, newNote, pageNum, noteTextArea, save);
+        details.getChildren().addAll(title, titleTF, author, authorTF, imageURL, imageURLTF, summary, summaryTF, pagesRead, pagesReadTF, tags, tagsTF, warning, save, newNote, pageNum, noteTextArea);
         if (selectedBook != null) {
             for (Note note : selectedBook.getNotes()) {
                 VBox cool = new VBox();
