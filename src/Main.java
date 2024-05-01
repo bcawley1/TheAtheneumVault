@@ -7,6 +7,7 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
@@ -18,7 +19,6 @@ import util.Range;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.*;
 
 public class Main extends Application {
@@ -27,6 +27,7 @@ public class Main extends Application {
     private SplitPane pageSplit;
     private Note selectedNote;
     private String currentFilter = "";
+    private String search = "";
 
     @Override
     public void start(Stage stage) throws IOException {
@@ -55,6 +56,29 @@ public class Main extends Application {
         BorderPane info = new BorderPane();
         info.setLeft(name);
         info.setRight(version);
+        Button important = new Button("Why is Reading Important?");
+        important.setOnMouseClicked(mouseEvent -> {
+            Stage stage1 = new Stage();
+            Scene scene = new Scene(new Label("""
+                    - Strengthened vocabulary to sound smarter to others
+                                        
+                    - Improved writing
+                                        
+                    - Gain ideas and improve creativity
+                                        
+                    - Memory - Workout for the brain
+                                        
+                    - Very cheap entertainment
+                                        
+                    - Develops imagination
+                                         
+                    Source: Grand Canyon University
+                    """), 400, 230);
+            stage1.setTitle("Why is Reading Important?");
+            stage1.setScene(scene);
+            stage1.show();
+        });
+        info.setCenter(important);
 
         page.getChildren().addAll(pageSplit, info);
 
@@ -66,14 +90,27 @@ public class Main extends Application {
 
     public void updateBookView() {
         VBox booksView = new VBox();
-        TextField search = new TextField();
+        TextField search = new TextField(this.search);
         search.setPromptText("Search For A Book");
+        search.setOnAction(actionEvent -> {
+            currentFilter = "";
+            this.search = search.getText();
+            updateBookView();
+        });
 
         GridPane books = new GridPane();
         books.setHgap(10);
         books.setVgap(10);
         ScrollPane sp = new ScrollPane(books);
-        List<Book> booksFiltered = currentFilter.isEmpty() ? library.getBooks() : library.filterBooks(currentFilter);
+        List<Book> booksFiltered;
+        if (!currentFilter.isEmpty()) {
+            booksFiltered = library.filterBooks(currentFilter);
+        } else if (!this.search.isEmpty()) {
+            booksFiltered = library.searchBooks(this.search);
+        } else {
+            booksFiltered = library.getBooks();
+        }
+//        List<Book> booksFiltered = currentFilter.isEmpty() ? library.getBooks() : library.filterBooks(currentFilter);
         for (int i = 0; i < booksFiltered.size(); i++) {
             Book book = booksFiltered.get(i);
 
@@ -88,6 +125,21 @@ public class Main extends Application {
 
             vBox.getChildren().addAll(iv, name);
             books.add(vBox, i % 2, i / 2);
+        }
+
+        try {
+            ImageView addBook = new ImageView(new Image(new File("Images/add.jpg").toURI().toURL().toString(), 200, 1000, true, true));
+            addBook.setOnMouseClicked(mouseEvent -> {
+                Book newBook = new Book("", "", "", "");
+                library.addBook(newBook);
+                selectedBook = newBook;
+                updateBookView();
+                updateDetails();
+            });
+            VBox vBox = new VBox(addBook);
+            books.add(vBox, books.getChildren().size() % 2, books.getChildren().size() / 2);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
 
@@ -115,13 +167,24 @@ public class Main extends Application {
         return image;
     }
 
-    public void updateTags(){
+    public void updateTags() {
         double split = 0.25;
         VBox lists = new VBox();
+        Button clear = new Button("No Filter");
+        clear.setPrefWidth(1000);
+        clear.setOnMouseClicked(mouseEvent -> {
+            currentFilter = "";
+            search = "";
+            updateTags();
+            updateBookView();
+            updateDetails();
+        });
+        lists.getChildren().add(clear);
         for (String tag : library.getAllTags()) {
             Button button = new Button(tag);
             button.setPrefWidth(1000);
             button.setOnMouseClicked(mouseEvent -> {
+                search = "";
                 currentFilter = tag;
                 updateTags();
                 updateBookView();
@@ -130,7 +193,7 @@ public class Main extends Application {
 
             lists.getChildren().add(button);
         }
-        if(pageSplit.getItems().size()==3) {
+        if (pageSplit.getItems().size() == 3) {
             split = pageSplit.getDividerPositions()[0];
             pageSplit.getItems().set(0, lists);
         } else {
@@ -142,9 +205,9 @@ public class Main extends Application {
     public void updateDetails() {
         double split = 0.75;
         double scrollAmount = 0;
-        if(pageSplit.getItems().size()==3) {
+        if (pageSplit.getItems().size() == 3) {
             split = pageSplit.getDividerPositions()[1];
-            scrollAmount = ((ScrollPane)pageSplit.getItems().get(2)).getVvalue();
+            scrollAmount = ((ScrollPane) pageSplit.getItems().get(2)).getVvalue();
             pageSplit.getItems().remove(2);
         }
 
@@ -174,7 +237,7 @@ public class Main extends Application {
         pagesReadTF.setPromptText("Pages Read");
 
         Label tags = new Label("Tags:");
-        TextField tagsTF = new TextField(selectedBook == null ? "" : selectedBook.getTags().toString().substring(1,selectedBook.getTags().toString().length()-1));
+        TextField tagsTF = new TextField(selectedBook == null ? "" : selectedBook.getTags().toString().substring(1, selectedBook.getTags().toString().length() - 1));
         tagsTF.setPromptText("Tags");
 
         Label warning = new Label();
@@ -210,22 +273,69 @@ public class Main extends Application {
         TextField pageNum = new TextField();
         pageNum.setPromptText("Page Number");
         TextArea noteTextArea = new TextArea();
-        noteTextArea.setPromptText("Note"); 
+        noteTextArea.setPromptText("Note");
         noteTextArea.setWrapText(true);
         noteTextArea.setPrefHeight(100);
 
-        details.getChildren().addAll(title, titleTF, author, authorTF, imageURL, imageURLTF, summary, summaryTF, pagesRead, pagesReadTF, tags, tagsTF, warning, save, newNote, pageNum, noteTextArea);
+        Button addNote = new Button("Add Note");
+        addNote.setOnMouseClicked(mouseEvent -> {
+            try {
+                selectedBook.addNote(Integer.parseInt(pageNum.getText()), noteTextArea.getText());
+                ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.writeValue(new File("library/library.json"), library);
+
+                updateDetails();
+                updateBookView();
+                updateTags();
+            } catch (Exception ignored) {
+            }
+        });
+
+        Button remove = new Button("Remove Book");
+        remove.setOnMouseClicked(mouseEvent -> {
+            library.getBooks().remove(selectedBook);
+            selectedBook = null;
+            ObjectMapper objectMapper = new ObjectMapper();
+            try {
+                objectMapper.writeValue(new File("library/library.json"), library);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            updateTags();
+            updateBookView();
+            updateDetails();
+        });
+
+        details.getChildren().addAll(remove, title, titleTF, author, authorTF, imageURL, imageURLTF, summary, summaryTF, pagesRead, pagesReadTF, tags, tagsTF, warning, save, newNote, pageNum, noteTextArea, addNote);
         if (selectedBook != null) {
             for (Note note : selectedBook.getNotes()) {
                 VBox cool = new VBox();
                 cool.setSpacing(0);
+                HBox buttons = new HBox();
+                buttons.setSpacing(0);
+
                 Button button = new Button(String.valueOf(note.getPageNumber()));
-                button.setPrefWidth(1000);
+//                button.setPrefWidth(100);
                 button.setOnMouseClicked(mouseEvent -> {
                     selectedNote = note;
                     updateDetails();
                 });
-                cool.getChildren().add(button);
+
+                Button removeNote = new Button("Remove");
+//                removeNote.setPrefWidth(100);
+                removeNote.setOnMouseClicked(mouseEvent -> {
+                    selectedBook.removeNote(note);
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    try {
+                        objectMapper.writeValue(new File("library/library.json"), library);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    updateDetails();
+                });
+
+                buttons.getChildren().addAll(button, removeNote);
+                cool.getChildren().add(buttons);
 
                 if (note.equals(selectedNote)) {
                     TextArea noteText = new TextArea(note.getNote());
@@ -233,6 +343,20 @@ public class Main extends Application {
                     noteText.setPrefHeight(100);
                     noteText.setPromptText("Note");
                     cool.getChildren().add(noteText);
+
+                    Button saveNote = new Button("Save");
+//                    saveNote.setPrefWidth(50);
+                    saveNote.setOnMouseClicked(mouseEvent -> {
+                        note.setNote(noteText.getText());
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        try {
+                            objectMapper.writeValue(new File("library/library.json"), library);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        updateDetails();
+                    });
+                    buttons.getChildren().add(saveNote);
                 }
                 details.getChildren().add(cool);
             }
@@ -266,6 +390,9 @@ public class Main extends Application {
     }
 
     public String convertPagesRead(Set<Integer> pages) {
+        if(pages.isEmpty()){
+            return "";
+        }
         List<Integer> listPages = new ArrayList<>(pages);
         Collections.sort(listPages);
         List<Range> range = new ArrayList<>(List.of(new Range()));

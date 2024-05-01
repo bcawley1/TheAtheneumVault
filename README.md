@@ -34,3 +34,11 @@
 - ### Filtering by a Tag
     1. Click on the tag you want to filter by on the left
     2. To clear the filter, click `No Filter` at the top of the filters list
+
+## Why Is Reading Important?
+- Strengthened vocabulary to sound smarter to others
+- Improved writing
+- Gain ideas and improve creativity
+- Memory - Workout for the brain
+- Very cheap entertainment
+
